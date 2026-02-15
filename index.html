@@ -348,7 +348,27 @@
       display: none;
     }
 
-    /* Credits */
+    /* Credits button on menu */
+    .credits-btn {
+      margin-top: 24px;
+      padding: 8px 28px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 1px;
+    }
+
+    .credits-btn:hover {
+      color: rgba(255,255,255,0.8);
+      border-color: rgba(255,255,255,0.35);
+    }
+
+    /* Credits footer */
     .credits {
       position: fixed;
       bottom: 12px;
@@ -521,6 +541,7 @@
       <p style="margin-top:6px">Grab <strong style="color:#00ffff">power-ups</strong> for rapid fire. <strong style="color:#ff4488">Avoid shooting aircraft</strong> or it's game over!</p>
       <p style="margin-top:8px">Camera access is required for hand tracking.</p>
     </div>
+    <button id="btn-credits" class="credits-btn" data-hoverable>Credits</button>
   </div>
 
   <!-- Loading Screen -->
@@ -597,6 +618,9 @@
 
   <script>
     document.getElementById('credits-trigger').addEventListener('click', () => {
+      document.getElementById('credits-overlay').style.display = 'flex';
+    });
+    document.getElementById('btn-credits').addEventListener('click', () => {
       document.getElementById('credits-overlay').style.display = 'flex';
     });
     document.getElementById('credits-overlay').addEventListener('click', () => {
