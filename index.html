@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shotter - Bird Shooting Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      overflow: hidden;
+      background: #0a0a1a;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: white;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #game-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+    }
+
+    #game-container canvas {
+      display: block;
+      width: 100%; height: 100%;
+    }
+
+    /* Webcam preview */
+    #webcam {
+      position: fixed;
+      bottom: 12px; left: 12px;
+      width: 160px; height: 120px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.2);
+      transform: scaleX(-1);
+      z-index: 100;
+      opacity: 0.7;
+      object-fit: cover;
+    }
+
+    #hand-indicator {
+      position: fixed;
+      bottom: 138px; left: 12px;
+      font-size: 12px;
+      z-index: 100;
+      padding: 4px 8px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 6px;
+      transition: color 0.3s;
+    }
+
+    /* Screens */
+    .screen-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      background: rgba(5, 5, 20, 0.92);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Menu */
+    #menu-screen h1 {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, #ff6644, #ffdd00, #00ff88);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    #menu-screen .subtitle {
+      font-size: 18px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 40px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .mode-btn {
+      padding: 16px 32px;
+      font-size: 18px;
+      font-weight: 700;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 140px;
+    }
+
+    .mode-btn:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.4);
+      transform: translateY(-2px);
+    }
+
+    .mode-btn .mode-desc {
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.5);
+      margin-top: 6px;
+    }
+
+    .instructions {
+      max-width: 500px;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .instructions strong {
+      color: #00ff88;
+    }
+
+    /* Loading */
+    #loading-screen h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: #00ff88;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: none;
+      z-index: 50;
+      padding: 16px 24px;
+      pointer-events: none;
+    }
+
+    #hud .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    #score {
+      font-size: 32px;
+      font-weight: 800;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    #combo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffdd00;
+      text-shadow: 0 0 12px rgba(255,221,0,0.5);
+      display: none;
+      animation: comboPulse 0.3s ease-out;
+    }
+
+    @keyframes comboPulse {
+      0% { transform: scale(1.5); }
+      100% { transform: scale(1); }
+    }
+
+    #lives {
+      font-size: 28px;
+      letter-spacing: 4px;
+    }
+
+    #timer {
+      font-size: 24px;
+      font-weight: 700;
+      color: #00ddff;
+    }
+
+    #accuracy {
+      font-size: 16px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+
+    .hud-right {
+      text-align: right;
+    }
+
+    /* Game Over */
+    #gameover-screen {
+      display: none;
+    }
+
+    #gameover-screen h2 {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 24px;
+      color: #ff6644;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 32px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+
+    .stat-label {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .restart-btn {
+      padding: 14px 40px;
+      font-size: 18px;
+      font-weight: 700;
+      border: 2px solid #00ff88;
+      border-radius: 12px;
+      background: rgba(0,255,136,0.1);
+      color: #00ff88;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .restart-btn:hover {
+      background: rgba(0,255,136,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Floating score */
+    .floating-score {
+      position: fixed;
+      z-index: 300;
+      font-size: 22px;
+      font-weight: 800;
+      color: #00ff88;
+      pointer-events: none;
+      text-shadow: 0 0 8px rgba(0,255,136,0.5);
+      transition: all 0.7s ease-out;
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Power-up HUD */
+    #powerup-hud {
+      position: fixed;
+      top: 70px; left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      background: rgba(0,255,255,0.15);
+      border: 2px solid rgba(0,255,255,0.5);
+      border-radius: 10px;
+      z-index: 60;
+      pointer-events: none;
+      animation: powerupGlow 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes powerupGlow {
+      from { box-shadow: 0 0 8px rgba(0,255,255,0.3); }
+      to { box-shadow: 0 0 20px rgba(0,255,255,0.6); }
+    }
+
+    #powerup-hud .pu-icon {
+      font-size: 20px;
+    }
+
+    #powerup-hud .pu-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #00ffff;
+    }
+
+    #powerup-timer {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffff00;
+    }
+
+    /* Aircraft warning */
+    #aircraft-warning {
+      position: fixed;
+      top: 110px; left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      padding: 8px 24px;
+      background: rgba(255,0,100,0.2);
+      border: 2px solid rgba(255,0,100,0.6);
+      border-radius: 10px;
+      z-index: 60;
+      pointer-events: none;
+      animation: warningPulse 0.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes warningPulse {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+
+    #aircraft-warning span {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ff4488;
+    }
+
+    /* Game Over reason */
+    #gameover-reason {
+      font-size: 18px;
+      color: #ff8888;
+      margin-bottom: 20px;
+      padding: 8px 20px;
+      background: rgba(255,0,0,0.1);
+      border-radius: 8px;
+      display: none;
+    }
+
+    /* Credits */
+    .credits {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <video id="webcam" autoplay playsinline></video>
+  <div id="hand-indicator">Show hands to camera</div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-row">
+      <div>
+        <div id="score">Score: 0</div>
+        <div id="combo">Combo x3!</div>
+        <div id="accuracy">Accuracy: 0%</div>
+      </div>
+      <div class="hud-right">
+        <div id="lives"></div>
+        <div id="timer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Power-up indicator -->
+  <div id="powerup-hud">
+    <span class="pu-icon">&#9889;</span>
+    <span class="pu-label">RAPID FIRE</span>
+    <span id="powerup-timer">7s</span>
+  </div>
+
+  <!-- Aircraft warning -->
+  <div id="aircraft-warning">
+    <span>&#9888; AIRCRAFT - DON'T SHOOT! &#9888;</span>
+  </div>
+
+  <!-- Menu Screen -->
+  <div id="menu-screen" class="screen-overlay">
+    <h1>SHOTTER</h1>
+    <p class="subtitle">Shoot birds with your hands</p>
+    <div class="mode-buttons">
+      <button id="btn-classic" class="mode-btn" data-hoverable>
+        Classic
+        <div class="mode-desc">5 lives. Don't let birds escape!</div>
+      </button>
+      <button id="btn-arcade" class="mode-btn" data-hoverable>
+        Arcade
+        <div class="mode-desc">60 seconds. Max score!</div>
+      </button>
+      <button id="btn-zen" class="mode-btn" data-hoverable>
+        Zen
+        <div class="mode-desc">90 seconds. No pressure.</div>
+      </button>
+    </div>
+    <div class="instructions">
+      <p>Use <strong>1 or 2 hands</strong> to aim — shooting is <strong>automatic</strong> when pointing at birds!</p>
+      <p style="margin-top:6px">Grab <strong style="color:#00ffff">power-ups</strong> for rapid fire. <strong style="color:#ff4488">Avoid shooting aircraft</strong> or it's game over!</p>
+      <p style="margin-top:8px">Camera access is required for hand tracking.</p>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="screen-overlay" style="display:none">
+    <h2>Loading...</h2>
+    <div class="spinner"></div>
+    <p style="margin-top:16px;color:rgba(255,255,255,0.5)">Setting up camera & hand tracking</p>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameover-screen" class="screen-overlay">
+    <h2>Game Over</h2>
+    <div id="gameover-reason"></div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-label">Score</span>
+        <span class="stat-value" id="final-score">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Birds Hit</span>
+        <span class="stat-value" id="final-hits">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-value" id="final-accuracy">0%</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Best Combo</span>
+        <span class="stat-value" id="final-combo">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Escaped</span>
+        <span class="stat-value" id="final-escaped">0</span>
+      </div>
+    </div>
+    <button id="btn-restart" class="restart-btn" data-hoverable>Play Again</button>
+  </div>
+
+  <div class="credits">Shotter - A hand-tracking bird shooter</div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
