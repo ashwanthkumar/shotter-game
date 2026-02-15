@@ -356,7 +356,113 @@
       font-size: 11px;
       color: rgba(255,255,255,0.3);
       z-index: 10;
+      cursor: pointer;
+      transition: color 0.3s;
     }
+
+    .credits:hover {
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* Easter egg credits overlay */
+    #credits-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      background: rgba(2, 2, 12, 0.96);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+    }
+
+    #credits-overlay .credits-title {
+      font-size: 42px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff6644, #ffdd00, #00ff88, #00ddff, #ff44ff);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s ease infinite;
+      margin-bottom: 32px;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #credits-overlay .credits-section {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    #credits-overlay .credits-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+
+    #credits-overlay .credits-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+
+    #credits-overlay .credits-name a {
+      color: #00ddff;
+      text-decoration: none;
+    }
+
+    #credits-overlay .credits-name a:hover {
+      text-decoration: underline;
+    }
+
+    #credits-overlay .credits-tech {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #credits-overlay .tech-badge {
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    #credits-overlay .credits-dismiss {
+      margin-top: 32px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.3);
+      animation: fadeInUp 0.5s ease 0.8s both;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #credits-overlay .credits-section {
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    #credits-overlay .credits-section:nth-child(2) { animation-delay: 0.1s; }
+    #credits-overlay .credits-section:nth-child(3) { animation-delay: 0.2s; }
+    #credits-overlay .credits-section:nth-child(4) { animation-delay: 0.3s; }
+    #credits-overlay .credits-section:nth-child(5) { animation-delay: 0.4s; }
+    #credits-overlay .credits-section:nth-child(6) { animation-delay: 0.5s; }
   </style>
 </head>
 <body>
@@ -453,7 +559,50 @@
     <button id="btn-restart" class="restart-btn" data-hoverable>Play Again</button>
   </div>
 
-  <div class="credits">Shotter - A hand-tracking bird shooter</div>
+  <div class="credits" id="credits-trigger">Shotter - A hand-tracking bird shooter</div>
+
+  <!-- Easter egg credits overlay -->
+  <div id="credits-overlay">
+    <div class="credits-title">SHOTTER</div>
+    <div class="credits-section">
+      <div class="credits-label">Created by</div>
+      <div class="credits-name">Ashwanth Kumar</div>
+    </div>
+    <div class="credits-section">
+      <div class="credits-label">Co-authored with</div>
+      <div class="credits-name">Claude Opus 4.6</div>
+    </div>
+    <div class="credits-section">
+      <div class="credits-label">Inspired by</div>
+      <div class="credits-name"><a href="https://github.com/ashwanthkumar/choppr" target="_blank">Choppr</a></div>
+    </div>
+    <div class="credits-section">
+      <div class="credits-label">Built with</div>
+      <div class="credits-tech">
+        <span class="tech-badge">TypeScript</span>
+        <span class="tech-badge">Three.js</span>
+        <span class="tech-badge">MediaPipe</span>
+        <span class="tech-badge">Web Audio API</span>
+        <span class="tech-badge">Vite</span>
+      </div>
+    </div>
+    <div class="credits-section">
+      <div class="credits-label">Assets</div>
+      <div class="credits-name" style="font-size:14px;color:rgba(255,255,255,0.5)">
+        Zero external assets. Every model, sound, and effect is procedurally generated at runtime.
+      </div>
+    </div>
+    <div class="credits-dismiss">click anywhere to close</div>
+  </div>
+
+  <script>
+    document.getElementById('credits-trigger').addEventListener('click', () => {
+      document.getElementById('credits-overlay').style.display = 'flex';
+    });
+    document.getElementById('credits-overlay').addEventListener('click', () => {
+      document.getElementById('credits-overlay').style.display = 'none';
+    });
+  </script>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
