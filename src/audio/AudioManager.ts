@@ -11,6 +11,9 @@ export class AudioManager {
     this.masterGain.connect(this.ctx.destination);
   }
 
+  getAudioContext(): AudioContext | null { return this.ctx; }
+  getMasterGain(): GainNode | null { return this.masterGain; }
+
   private ensureContext(): void {
     if (this.ctx?.state === 'suspended') {
       this.ctx.resume();

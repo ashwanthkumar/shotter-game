@@ -483,6 +483,132 @@
     #credits-overlay .credits-section:nth-child(4) { animation-delay: 0.3s; }
     #credits-overlay .credits-section:nth-child(5) { animation-delay: 0.4s; }
     #credits-overlay .credits-section:nth-child(6) { animation-delay: 0.5s; }
+
+    /* Recorder button */
+    .recorder-btn {
+      position: fixed;
+      top: 16px; right: 16px;
+      z-index: 55;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .recorder-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .recorder-btn--active {
+      border-color: #ff3333;
+      background: rgba(255,0,0,0.2);
+      color: #ff4444;
+    }
+
+    .recorder-btn--active:hover {
+      background: rgba(255,0,0,0.3);
+      border-color: #ff4444;
+    }
+
+    /* Recording indicator */
+    .recorder-indicator {
+      position: fixed;
+      top: 52px; right: 16px;
+      z-index: 55;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    .recorder-dot {
+      width: 10px; height: 10px;
+      background: #ff3333;
+      border-radius: 50%;
+      animation: recorderPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes recorderPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .recorder-duration {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ff6666;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Download panel */
+    .recorder-panel {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 250;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5,5,20,0.94);
+      backdrop-filter: blur(8px);
+    }
+
+    .recorder-preview {
+      width: 640px;
+      max-width: 85vw;
+      max-height: 50vh;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.15);
+      background: #000;
+      margin-bottom: 20px;
+    }
+
+    .recorder-download-btn {
+      display: inline-block;
+      padding: 12px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      border: 2px solid #00ff88;
+      border-radius: 10px;
+      background: rgba(0,255,136,0.1);
+      color: #00ff88;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .recorder-download-btn:hover {
+      background: rgba(0,255,136,0.2);
+      transform: translateY(-2px);
+    }
+
+    .recorder-close-btn {
+      position: absolute;
+      top: 20px; right: 24px;
+      font-size: 32px;
+      font-weight: 300;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+
+    .recorder-close-btn:hover {
+      color: #fff;
+    }
   </style>
 </head>
 <body>

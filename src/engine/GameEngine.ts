@@ -9,6 +9,7 @@ import { CrosshairRenderer } from '../vfx/CrosshairRenderer';
 import { AudioManager } from '../audio/AudioManager';
 import { ScoreManager } from '../ui/ScoreManager';
 import { HandCursorUI } from '../ui/HandCursorUI';
+import { GameRecorder } from '../ui/GameRecorder';
 import { ActiveBird, Aircraft, PowerUp, GameMode, GameState } from '../types';
 import {
   CAMERA_Z,
@@ -55,6 +56,7 @@ export class GameEngine {
   private audio!: AudioManager;
   private scoreManager!: ScoreManager;
   private handCursorUI!: HandCursorUI;
+  private recorder!: GameRecorder;
 
   // Game state
   private state: GameState = 'menu';
@@ -238,6 +240,12 @@ export class GameEngine {
       this.handTracker = new HandTracker(this.video);
       await this.handTracker.init();
       this.audio.init();
+      this.recorder = new GameRecorder(
+        this.renderer.domElement,
+        this.video,
+        this.audio.getAudioContext(),
+        this.audio.getMasterGain()
+      );
 
       document.getElementById('loading-screen')!.style.display = 'none';
       this.startGame();
@@ -288,11 +296,15 @@ export class GameEngine {
 
     this.livesEl.style.display = this.mode === 'classic' ? 'block' : 'none';
     this.timerEl.style.display = this.mode !== 'classic' ? 'block' : 'none';
+
+    this.recorder.showButton();
   }
 
   private endGame(reason?: string): void {
     this.state = 'gameover';
     this.audio.playGameOver();
+    this.recorder.stopRecording();
+    this.recorder.hideButton();
 
     document.getElementById('hud')!.style.display = 'none';
     this.powerUpHud.style.display = 'none';
