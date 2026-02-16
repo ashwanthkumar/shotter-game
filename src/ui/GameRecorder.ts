@@ -31,6 +31,17 @@ export class GameRecorder {
   private durationEl: HTMLSpanElement;
   private panel: HTMLDivElement;
 
+  // HUD element refs (queried once)
+  private hudEl!: HTMLElement;
+  private scoreEl!: HTMLElement;
+  private comboEl!: HTMLElement;
+  private livesEl!: HTMLElement;
+  private timerEl!: HTMLElement;
+  private accuracyEl!: HTMLElement;
+  private powerUpHud!: HTMLElement;
+  private powerUpTimerEl!: HTMLElement;
+  private aircraftWarningEl!: HTMLElement;
+
   private supported: boolean;
 
   constructor(
@@ -79,6 +90,17 @@ export class GameRecorder {
     this.panel.className = 'recorder-panel';
     this.panel.style.display = 'none';
     document.body.appendChild(this.panel);
+
+    // Cache HUD element refs
+    this.hudEl = document.getElementById('hud')!;
+    this.scoreEl = document.getElementById('score')!;
+    this.comboEl = document.getElementById('combo')!;
+    this.livesEl = document.getElementById('lives')!;
+    this.timerEl = document.getElementById('timer')!;
+    this.accuracyEl = document.getElementById('accuracy')!;
+    this.powerUpHud = document.getElementById('powerup-hud')!;
+    this.powerUpTimerEl = document.getElementById('powerup-timer')!;
+    this.aircraftWarningEl = document.getElementById('aircraft-warning')!;
   }
 
   showButton(): void {
@@ -234,10 +256,126 @@ export class GameRecorder {
 
       ctx.restore();
 
+      // Draw HUD overlay
+      this.drawHUD(ctx, w, scaleX, scaleY);
+
       this.compositeRafId = requestAnimationFrame(draw);
     };
 
     this.compositeRafId = requestAnimationFrame(draw);
+  }
+
+  /** Draw HUD text onto the composite canvas, matching the CSS layout */
+  private drawHUD(ctx: CanvasRenderingContext2D, w: number, sx: number, sy: number): void {
+    if (this.hudEl.style.display === 'none') return;
+
+    const font = (size: number, weight: number) =>
+      `${weight} ${Math.round(size * sy)}px "Segoe UI", system-ui, -apple-system, sans-serif`;
+
+    const pad = { x: 24 * sx, y: 16 * sy };
+
+    ctx.save();
+    ctx.textBaseline = 'top';
+
+    // --- Left column ---
+    let leftY = pad.y;
+
+    // Score
+    const scoreText = this.scoreEl.textContent || '';
+    ctx.font = font(32, 800);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 8 * sy;
+    ctx.shadowOffsetY = 2 * sy;
+    ctx.fillText(scoreText, pad.x, leftY);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    leftY += 36 * sy;
+
+    // Combo (only if visible)
+    if (this.comboEl.style.display !== 'none') {
+      const comboText = this.comboEl.textContent || '';
+      ctx.font = font(24, 700);
+      ctx.fillStyle = '#ffdd00';
+      ctx.shadowColor = 'rgba(255,221,0,0.5)';
+      ctx.shadowBlur = 12 * sy;
+      ctx.fillText(comboText, pad.x, leftY);
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      leftY += 28 * sy;
+    }
+
+    // Accuracy
+    const accText = this.accuracyEl.textContent || '';
+    ctx.font = font(16, 400);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillText(accText, pad.x, leftY + 4 * sy);
+
+    // --- Right column ---
+    ctx.textAlign = 'right';
+    let rightY = pad.y;
+    const rightX = w - pad.x;
+
+    // Lives (if visible)
+    if (this.livesEl.style.display !== 'none') {
+      const livesText = this.livesEl.textContent || '';
+      ctx.font = font(28, 400);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(livesText, rightX, rightY);
+      rightY += 34 * sy;
+    }
+
+    // Timer (if visible)
+    if (this.timerEl.style.display !== 'none') {
+      const timerText = this.timerEl.textContent || '';
+      ctx.font = font(24, 700);
+      ctx.fillStyle = '#00ddff';
+      ctx.fillText(timerText, rightX, rightY);
+    }
+
+    // --- Center indicators ---
+    ctx.textAlign = 'center';
+    const centerX = w / 2;
+
+    // Power-up HUD
+    if (this.powerUpHud.style.display !== 'none') {
+      const puText = `\u26A1 RAPID FIRE ${this.powerUpTimerEl.textContent || ''}`;
+      const puY = 70 * sy;
+      // Background pill
+      ctx.font = font(14, 700);
+      const puMetrics = ctx.measureText(puText);
+      const pillW = puMetrics.width + 40 * sx;
+      const pillH = 36 * sy;
+      ctx.fillStyle = 'rgba(0,255,255,0.15)';
+      ctx.strokeStyle = 'rgba(0,255,255,0.5)';
+      ctx.lineWidth = 2 * sx;
+      this.roundRect(ctx, centerX - pillW / 2, puY - 4 * sy, pillW, pillH, 10 * sx);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#00ffff';
+      ctx.fillText(puText, centerX, puY + 4 * sy);
+    }
+
+    // Aircraft warning
+    if (this.aircraftWarningEl.style.display !== 'none') {
+      const warnText = '\u26A0 AIRCRAFT - DON\'T SHOOT! \u26A0';
+      const warnY = 110 * sy;
+      ctx.font = font(16, 700);
+      const warnMetrics = ctx.measureText(warnText);
+      const wPillW = warnMetrics.width + 48 * sx;
+      const wPillH = 38 * sy;
+      ctx.fillStyle = 'rgba(255,0,100,0.2)';
+      ctx.strokeStyle = 'rgba(255,0,100,0.6)';
+      ctx.lineWidth = 2 * sx;
+      this.roundRect(ctx, centerX - wPillW / 2, warnY - 4 * sy, wPillW, wPillH, 10 * sx);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ff4488';
+      ctx.fillText(warnText, centerX, warnY + 6 * sy);
+    }
+
+    ctx.restore();
   }
 
   /** Draw a rounded rectangle path */
